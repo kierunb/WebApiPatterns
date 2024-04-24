@@ -7,3 +7,5 @@
     - [Wiki](https://github.com/jbogard/MediatR/wiki)
     - [Refactoring/Design Patterns Guru](https://refactoring.guru/design-patterns)
 - [FluentValidation](https://docs.fluentvalidation.net/en/latest/)
+- SeriLog
+    - [Docs](https://github.com/serilog/serilog-aspnetcore)
