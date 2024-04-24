@@ -1,34 +1,73 @@
 using System.Reflection;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Serilog;
+using WebApiPatterns.Behaviors;
 
-var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var assembly = Assembly.GetExecutingAssembly();
-
-builder.Services.AddMediatR(cfg =>
+try
 {
-    cfg.RegisterServicesFromAssembly(assembly);
-});
+    Log.Information("Starting web application");
 
-var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+    var builder = WebApplication.CreateBuilder(args);
+    builder.Services.AddSerilog();
+
+    // Add services to the container.
+
+    builder.Services.AddControllers();
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
+    var assembly = Assembly.GetExecutingAssembly();
+
+    builder.Services.AddMediatR(cfg =>
+    {
+        cfg.RegisterServicesFromAssembly(assembly);
+        cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+    });
+
+    // automatic registration of validators
+    builder.Services.AddValidatorsFromAssembly(assembly);
+
+    // integration of FluentValidation with ASP.NET Core
+    builder.Services.AddFluentValidationAutoValidation();
+
+    // integration of FluentValidation with MediatR
+    //builder.Services.AddFluentValidationAutoValidation();
+
+
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseHttpsRedirection();
+
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    app.Run();
+}
+catch (Exception ex)
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
 }
 
-app.UseHttpsRedirection();
 
-app.UseAuthorization();
 
-app.MapControllers();
 
-app.Run();

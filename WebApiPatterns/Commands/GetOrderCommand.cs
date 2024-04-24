@@ -1,19 +1,34 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 
 namespace WebApiPatterns.Commands;
 
 // 1) Define input data
 // 2) Define output data
 // 3) Define command handler (implementation)
+// 4) Define validator for input data (optional)
 
 // 1) class implementing IRequest<T> interface (DTO)
-public class GetOrderRequest : IRequest<GetOrderResponse>
+public record GetOrderRequest : IRequest<GetOrderResponse>
 {
     public int OrderId { get; set; }
 }
 
+public class GetOrderRequestValidator : AbstractValidator<GetOrderRequest>
+{
+    public GetOrderRequestValidator()
+    {
+        RuleFor(x => x.OrderId).GreaterThan(0).Must(BeValidOrderId);
+    }
+
+    private bool BeValidOrderId(int orderId)
+    {
+        return orderId != 666;
+    }
+}
+
 // 2) class with the result of the command (response) (DTO/ViewModel)
-public class GetOrderResponse
+public record GetOrderResponse
 {
     public int OrderId { get; set; }
     public string OrderName { get; set; } = string.Empty;
